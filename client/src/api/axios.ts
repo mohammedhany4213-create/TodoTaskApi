@@ -1,0 +1,81 @@
+import axios, { AxiosError } from 'axios';
+
+const TOKEN_KEY = 'taskflow_auth_token';
+
+export const authToken = {
+  get: (): string | null => localStorage.getItem(TOKEN_KEY),
+  set: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
+  remove: (): void => localStorage.removeItem(TOKEN_KEY),
+};
+
+const api = axios.create({
+  baseURL: 'http://localhost:5216',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+});
+
+api.interceptors.request.use((config) => {
+  const token = authToken.get();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      authToken.remove();
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data;
+
+    if (typeof data === 'string' && data.trim()) {
+      return data;
+    }
+
+    if (data && typeof data === 'object') {
+      const record = data as Record<string, unknown>;
+
+      if (typeof record.title === 'string' && record.title) {
+        return record.title;
+      }
+
+      if (typeof record.message === 'string' && record.message) {
+        return record.message;
+      }
+
+      if (record.errors && typeof record.errors === 'object') {
+        const messages = Object.values(record.errors as Record<string, string[]>)
+          .flat()
+          .filter(Boolean);
+        if (messages.length > 0) {
+          return messages.join(' ');
+        }
+      }
+    }
+
+    if (error.message) {
+      return error.message;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+export default api;

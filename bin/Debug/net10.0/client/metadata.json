@@ -1,0 +1,6 @@
+{
+  "name": "TaskFlow SaaS",
+  "description": "A premium SaaS-quality Todo & Task Management interface inspired by Linear, Notion, and Vercel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
