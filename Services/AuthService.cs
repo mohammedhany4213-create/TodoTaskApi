@@ -1,122 +1,119 @@
-using Microsoft.AspNetCore.Identity ;
-using TodoApi.Data ;
-using TodoApi.Models ;
-using TodoApi.DTOs.Auth ;
-using TodoApi.Services.Interfaces ;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
+using TodoApi.Data;
+using TodoApi.DTOs.Auth;
+using TodoApi.Models;
+using TodoApi.Services.Interfaces;
 
-namespace TodoApi.Services ;
+namespace TodoApi.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly AppDbContext _context ;
-    private readonly PasswordHasher<User> _passwordHasher ;
+    private readonly AppDbContext _context;
+    private readonly PasswordHasher<User> _passwordHasher = new();
     private readonly IConfiguration _configuration;
 
     public AuthService(AppDbContext context, IConfiguration configuration)
-{
-    _context = context;
-    _configuration = configuration;
-    _passwordHasher = new PasswordHasher<User>();
-}
-
-    private string GenerateToken(User user)
-{
-    var key = _configuration["Jwt:Key"]!;
-    var securityKey = new SymmetricSecurityKey(
-    Encoding.UTF8.GetBytes(key)
-);
-var credentials = new SigningCredentials(
-    securityKey,
-    SecurityAlgorithms.HmacSha256
-);
-var claims = new List<Claim>
-{
-    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-
-    new Claim(JwtRegisteredClaimNames.Email, user.Email),
-
-    new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
-};
-
-var token = new JwtSecurityToken(
-    issuer: _configuration["Jwt:Issuer"],
-    audience: _configuration["Jwt:Audience"],
-    claims: claims,
-    expires: DateTime.UtcNow.AddMinutes(
-        Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])
-    ),
-    signingCredentials: credentials
-);
-
-return new JwtSecurityTokenHandler().WriteToken(token);
-
-}
-
-
-
+    {
+        _context = context;
+        _configuration = configuration;
+    }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
     {
-        var existingUser = await _context.Users.
-        FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if(existingUser != null)
-        {
-            throw new Exception("Email already exists");
-        }
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var userName = dto.UserName.Trim();
+
+        if (await _context.Users.AnyAsync(u => u.Email == email))
+            throw new InvalidOperationException("Email already exists.");
+
         var user = new User
-{
-    UserName = dto.UserName,
-    Email = dto.Email
-};
-user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+        {
+            UserName = userName,
+            Email = email
+        };
 
-_context.Users.Add(user);
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+        _context.Users.Add(user);
 
-await _context.SaveChangesAsync();
-var token = GenerateToken(user);
-return new AuthResponseDto
-{
-    Token = token,
-    Expiration = DateTime.UtcNow.AddMinutes(
-        Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])
-    )
-};
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("Email already exists.");
+        }
+
+        return CreateAuthResponse(user);
     }
 
-
-
-
-    public async Task <AuthResponseDto> LoginAsync(LoginDto dto)
+    public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
-        var user = await _context.Users.
-        FirstOrDefaultAsync(u => u.Email == dto.Email) ;
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        if (user == null)
-        {
-            throw new Exception("Invalid email or password.");
-        }
+        if (user is null)
+            throw new UnauthorizedAccessException("Invalid email or password.");
 
         var result = _passwordHasher.VerifyHashedPassword(
-    user,
-    user.PasswordHash,
-    dto.Password
-);
+            user,
+            user.PasswordHash,
+            dto.Password);
+
         if (result == PasswordVerificationResult.Failed)
+            throw new UnauthorizedAccessException("Invalid email or password.");
+
+        if (result == PasswordVerificationResult.SuccessRehashNeeded)
         {
-            throw new Exception("Invalid email or password.");
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+            await _context.SaveChangesAsync();
         }
-        var token = GenerateToken(user);
+
+        return CreateAuthResponse(user);
+    }
+
+    private AuthResponseDto CreateAuthResponse(User user)
+    {
+        var key = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT key is not configured.");
+        var issuer = _configuration["Jwt:Issuer"]
+            ?? throw new InvalidOperationException("JWT issuer is not configured.");
+        var audience = _configuration["Jwt:Audience"]
+            ?? throw new InvalidOperationException("JWT audience is not configured.");
+        var duration = _configuration.GetValue<int?>("Jwt:DurationInMinutes")
+            ?? throw new InvalidOperationException("JWT duration is not configured.");
+
+        if (duration <= 0)
+            throw new InvalidOperationException("JWT duration must be greater than zero.");
+
+        var expiration = DateTime.UtcNow.AddMinutes(duration);
+        var credentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: expiration,
+            signingCredentials: credentials);
+
         return new AuthResponseDto
         {
-        Token = token,
-        Expiration = DateTime.UtcNow.AddMinutes(
-        Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])
-        )
+            Token = new JwtSecurityTokenHandler().WriteToken(token),
+            Expiration = expiration
         };
     }
 }
