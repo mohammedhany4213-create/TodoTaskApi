@@ -1,10 +1,10 @@
 import api from './axios';
-import { Task, TaskStatus } from '../types';
+import { Task } from '../types';
 
 export interface ApiTaskDto {
   id: number;
   title: string;
-  description?: string | null;
+  description: string;
   isCompleted: boolean;
   createdAt: string;
   dueDate?: string | null;
@@ -13,8 +13,6 @@ export interface ApiTaskDto {
 export interface CreateTaskRequest {
   title: string;
   description: string;
-  isCompleted?: boolean;
-  createdAt: string;
   dueDate?: string | null;
 }
 
@@ -25,9 +23,7 @@ export interface UpdateTaskRequest {
   dueDate?: string | null;
 }
 
-function formatDate(iso: string): string {
-  return iso.split('T')[0];
-}
+const formatDate = (value: string): string => value.split('T')[0];
 
 export function mapApiTaskToTask(dto: ApiTaskDto): Task {
   const createdDate = formatDate(dto.createdAt);
@@ -46,29 +42,25 @@ export function mapApiTaskToTask(dto: ApiTaskDto): Task {
   };
 }
 
-export function mapTaskStatusToIsCompleted(status: TaskStatus): boolean {
-  return status === 'completed';
-}
-
 export async function getTasks(): Promise<Task[]> {
-  const response = await api.get<ApiTaskDto[]>('/api/todo');
+  const response = await api.get<ApiTaskDto[]>('/api/tasks');
   return response.data.map(mapApiTaskToTask);
 }
 
 export async function getTaskById(id: string): Promise<Task> {
-  const response = await api.get<ApiTaskDto>(`/api/todo/${id}`);
+  const response = await api.get<ApiTaskDto>(`/api/tasks/${id}`);
   return mapApiTaskToTask(response.data);
 }
 
 export async function createTask(data: CreateTaskRequest): Promise<Task> {
-  const response = await api.post<ApiTaskDto>('/api/todo', data);
+  const response = await api.post<ApiTaskDto>('/api/tasks', data);
   return mapApiTaskToTask(response.data);
 }
 
 export async function updateTask(id: string, data: UpdateTaskRequest): Promise<void> {
-  await api.put(`/api/todo/${id}`, data);
+  await api.put(`/api/tasks/${id}`, data);
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  await api.delete(`/api/todo/${id}`);
+  await api.delete(`/api/tasks/${id}`);
 }
