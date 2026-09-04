@@ -1,89 +1,73 @@
-using Microsoft.AspNetCore.Mvc ;
-using TodoApi.Services;
-using TodoApi.Services.Interfaces ;
 using Microsoft.AspNetCore.Authorization;
-using TodoApi.DTOs ;
-using System.Security.Claims ;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TodoApi.DTOs.Tasks;
+using TodoApi.Services.Interfaces;
 
-namespace TodoApi.Controllers
+namespace TodoApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class TasksController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    
-    public class TodoController : ControllerBase
+    private readonly ITaskService _taskService;
+
+    public TasksController(ITaskService taskService)
     {
-        private readonly ITaskService _taskService ;
+        _taskService = taskService;
+    }
 
-        public TodoController(ITaskService taskService)
-        {
-            _taskService = taskService ;
-        }
-
-    private int GetCurrentUserId()
-{
-    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-    if (string.IsNullOrEmpty(userId))
-        throw new UnauthorizedAccessException("User ID not found.");
-
-    return int.Parse(userId);
-}
     [HttpGet]
-    public async Task<IActionResult> GetAllTasks()
-        {
-            var userId = GetCurrentUserId();
-            var tasks = await _taskService.GetAllTasksAsync(userId);
-            return Ok(tasks);
-        }
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAllTasks()
+    {
+        var userId = GetCurrentUserId();
+        return Ok(await _taskService.GetAllTasksAsync(userId));
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<TaskDto>> GetTaskById(int id)
+    {
+        var userId = GetCurrentUserId();
+        var task = await _taskService.GetTaskByIdAsync(id, userId);
+
+        return task is null ? NotFound() : Ok(task);
+    }
 
     [HttpPost]
-    public async Task<IActionResult> CreateTask(CreateTaskDto dto)
-        {
-            var userId = GetCurrentUserId() ;
-            var task = await _taskService.CreateTaskAsync(dto ,userId);
-            return CreatedAtAction(
-                nameof(GetTaskById),
-                new {id = task.Id} ,
-                task
-            );
-        }
+    public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var task = await _taskService.CreateTaskAsync(dto, userId);
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetTaskById(int id)
-        {
-            var userId = GetCurrentUserId() ;
-            var task = await _taskService.GetTaskByIdAsync(id , userId);
-            if(task == null)
-            return NotFound() ;
+        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+    }
 
-            return Ok(task) ;
-        }
-    
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateTask(int id , UpdateTaskDto dto)
-        {
-            var userId = GetCurrentUserId() ;
-            var updated = await _taskService.UpdateTaskAsync(id , dto , userId) ;
-            if(!updated)
-            return NotFound();
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var updated = await _taskService.UpdateTaskAsync(id, dto, userId);
 
-            return NoContent();
-        }
+        return updated ? NoContent() : NotFound();
+    }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteTask(int id)
-        {
-            var userId = GetCurrentUserId() ;
-            var deleted =await _taskService.DeleteTaskAsync(id , userId);
-            if(!deleted)
-                return NotFound();
-            return NoContent();
-        }
+    {
+        var userId = GetCurrentUserId();
+        var deleted = await _taskService.DeleteTaskAsync(id, userId);
 
+        return deleted ? NoContent() : NotFound();
+    }
 
+    private int GetCurrentUserId()
+    {
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(value, out var userId) || userId <= 0)
+            throw new UnauthorizedAccessException("Invalid user identity.");
+
+        return userId;
     }
 }
-
