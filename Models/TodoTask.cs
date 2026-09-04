@@ -1,29 +1,25 @@
-using System.ComponentModel.DataAnnotations ;
+using System.ComponentModel.DataAnnotations;
 
-namespace TodoApi.Models
+namespace TodoApi.Models;
+
+public class TodoTask
 {
-    public class TodoTask
-    {
-        public int UserId {get; set;}
-        public User User {get; set;} = null! ;
-        public int Id {get; set;} 
-        
-        [Required]
-        [MaxLength(100)]
-        public string Title {get; set;} = string.Empty ;
+    public int Id { get; set; }
 
-        [Required]
-        [MaxLength(500)]
-        public string Description {get; set;} = string.Empty ;
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
 
-        public bool IsCompleted = false ;
+    [Required]
+    [MaxLength(100)]
+    public string Title { get; set; } = string.Empty;
 
-        public DateTime CreatedAt {get; set;} = DateTime.Now ;
+    [Required]
+    [MaxLength(500)]
+    public string Description { get; set; } = string.Empty;
 
-        public DateTime? DueDate {get; set;}
+    public bool IsCompleted { get; set; } = false;
 
-        
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        
-    }
+    public DateTime? DueDate { get; set; }
 }
