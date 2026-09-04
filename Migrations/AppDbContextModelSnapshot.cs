@@ -41,6 +41,9 @@ namespace TodoApi.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -50,9 +53,7 @@ namespace TodoApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
                     b.HasIndex("UserId");
-
                     b.ToTable("Tasks");
                 });
 
@@ -79,7 +80,7 @@ namespace TodoApi.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
-
+                    b.HasIndex("Email").IsUnique();
                     b.ToTable("Users");
                 });
 
