@@ -1,3 +1,4 @@
+![.NET CI](https://github.com/mohammedhany4213-create/TodoTaskApi/actions/workflows/dotnet-ci.yml/badge.svg)
 # TodoTaskApi
 
 A simple full-stack task management application built with **ASP.NET Core Web API (.NET 10)** and **React + TypeScript + Vite**.
