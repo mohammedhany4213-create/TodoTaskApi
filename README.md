@@ -1,98 +1,102 @@
-<div align="center">
+# TodoTaskApi
 
-# 📝 Todo Task API
+A simple full-stack task management application built with **ASP.NET Core Web API (.NET 10)** and **React + TypeScript + Vite**.
 
-**A full-stack task management app** built with **ASP.NET Core Web API (.NET 10)** on the backend and **React + TypeScript + Vite** on the frontend, secured with **JWT Authentication**.
+## Features
 
-![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-EF%20Core-CC2927?logo=microsoftsqlserver&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+- User registration and login
+- JWT authentication
+- Secure password hashing with ASP.NET `PasswordHasher`
+- Create, read, update, and delete tasks
+- User-scoped task access
+- SQL Server with Entity Framework Core
+- Code-first EF Core migrations
+- React + TypeScript frontend
+- OpenAPI documentation in development
 
-</div>
+## Tech Stack
 
----
+| Layer | Technology |
+|---|---|
+| Backend | ASP.NET Core Web API (.NET 10) |
+| ORM | Entity Framework Core |
+| Database | SQL Server |
+| Authentication | JWT Bearer |
+| Frontend | React 19 + TypeScript + Vite |
+| Styling | Tailwind CSS |
 
-## 📸 Preview
+## Project Structure
 
-> _Add a screenshot or GIF of the app here — this is the single biggest thing that makes a repo look alive._
->
-> `![App preview](docs/preview.gif)`
-
----
-
-## ✨ Features
-
-- 🔐 User registration & login with **JWT Authentication**
-- 🔒 Secure password hashing (no plain-text passwords, ever)
-- ✅ Full CRUD for personal tasks (create, read, update, delete)
-- 👤 Tasks are scoped per user — you only ever see your own data
-- 🗄️ SQL Server persistence via Entity Framework Core (code-first migrations)
-- ⚛️ React + TypeScript frontend talking to the API over REST
-
-## 🛠️ Tech Stack
-
-| Layer      | Technology |
-|------------|------------|
-| Backend    | ASP.NET Core Web API (.NET 10), Entity Framework Core, JWT Bearer Auth |
-| Database   | SQL Server |
-| Frontend   | React 19, TypeScript, Vite |
-| Auth       | JWT (JSON Web Tokens), ASP.NET `PasswordHasher` |
-
-## 🏗️ Project Structure
-
-```
+```text
 TodoTaskApi/
+├── server/                  # ASP.NET Core Web API
+│   ├── Controllers/
+│   ├── Data/
+│   ├── DTOs/
+│   ├── Exceptions/
+│   ├── Migrations/
+│   ├── Models/
+│   ├── Services/
+│   │   └── Interfaces/
+│   ├── Properties/
+│   ├── Program.cs
+│   ├── TodoApi.csproj
+│   ├── appsettings.json
+│   └── appsettings.Development.json
 │
-├── Controllers/        # API endpoints (Auth, Tasks)
-├── Services/            # Business logic (+ Interfaces for DI)
-├── DTOs/                 # Request/response contracts (Auth, Tasks)
-├── Models/               # EF Core entities (User, TodoTask)
-├── Data/                  # AppDbContext
-├── Migrations/           # EF Core migrations
-├── client/                # React + TypeScript + Vite frontend
-└── Program.cs             # App startup & DI configuration
+├── client/                  # React frontend
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.*
+│
+├── TodoTaskApi.sln          # Root solution
+├── .gitignore
+└── README.md
 ```
 
-## 🚀 Getting Started
+## Requirements
 
-### Prerequisites
+- .NET 10 SDK
+- Node.js 18+
+- SQL Server / SQL Server Express
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) (18+)
-- SQL Server (LocalDB / Express / full instance)
+## Configuration
 
-### 1. Clone the repository
+Never commit real secrets to GitHub.
 
-```bash
-git clone https://github.com/mohammedhany4213-create/TodoTaskApi.git
-cd TodoTaskApi
+The API expects the following configuration values:
+
+```text
+ConnectionStrings:DefaultConnection
+Jwt:Key
+Jwt:Issuer
+Jwt:Audience
+Jwt:DurationInMinutes
 ```
 
-### 2. Configure secrets
-
-Don't put real secrets in `appsettings.json`. Use the .NET Secret Manager instead:
+For local development, use .NET User Secrets from the `server` directory:
 
 ```bash
-dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=.\SQLEXPRESS;Database=TodoDb;Trusted_Connection=True;TrustServerCertificate=True;"
-dotnet user-secrets set "Jwt:Key" "your-own-strong-secret-key"
+cd server
+dotnet user-secrets set "Jwt:Key" "your-strong-secret-key-at-least-32-characters"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-local-sql-server-connection-string"
 ```
 
-### 3. Apply migrations
+## Run the Backend
 
 ```bash
+cd server
+dotnet restore
 dotnet ef database update
-```
-
-### 4. Run the API
-
-```bash
 dotnet run
 ```
 
-### 5. Run the frontend
+The API uses HTTPS in development. The exact local URL is shown by `dotnet run`.
+
+OpenAPI is available in the Development environment.
+
+## Run the Frontend
 
 ```bash
 cd client
@@ -100,45 +104,40 @@ npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:3000` and talks to the API via CORS.
+Vite uses port `5173` by default.
 
-## 📡 API Reference
+## API Endpoints
 
-### Auth — `/api/Auth`
+### Authentication
 
-| Method | Endpoint | Description | Auth required |
-|--------|----------|--------------|:---:|
-| `POST` | `/api/Auth/register` | Register a new user | ❌ |
-| `POST` | `/api/Auth/login` | Log in and receive a JWT | ❌ |
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/Auth/register` | Register a new user |
+| POST | `/api/Auth/login` | Login and receive a JWT |
 
-### Tasks — `/api/Todo`
+### Tasks
 
-| Method | Endpoint | Description | Auth required |
-|--------|----------|--------------|:---:|
-| `GET`  | `/api/Todo` | Get all tasks for the logged-in user | ✅ |
-| `GET`  | `/api/Todo/{id}` | Get a single task by id | ✅ |
-| `POST` | `/api/Todo` | Create a new task | ✅ |
-| `PUT`  | `/api/Todo/{id}` | Update an existing task | ✅ |
-| `DELETE` | `/api/Todo/{id}` | Delete a task | ✅ |
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/Tasks` | Get the current user's tasks |
+| GET | `/api/Tasks/{id}` | Get one of the current user's tasks |
+| POST | `/api/Tasks` | Create a task |
+| PUT | `/api/Tasks/{id}` | Update a task |
+| DELETE | `/api/Tasks/{id}` | Delete a task |
 
-> All `Tasks` endpoints require an `Authorization: Bearer <token>` header from a successful login.
+Task endpoints require:
 
-## 🗺️ Roadmap
+```text
+Authorization: Bearer <token>
+```
 
-- [ ] Refresh tokens
-- [ ] Email verification
-- [ ] Role-based authorization
-- [ ] Docker support
-- [ ] Unit & integration tests
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Live deployment
+## Development Notes
 
-## 📄 License
+- Secrets belong in User Secrets or environment variables, not source control.
+- Database migrations are kept under `server/Migrations`.
+- Backend and frontend are intentionally separated into `server` and `client`.
+- The root directory is reserved for shared repository files and the solution file.
 
-This project is licensed under the [MIT License](LICENSE).
+## License
 
----
-
-<div align="center">
-Built by <a href="https://github.com/mohammedhany4213-create">Mohammed Hany</a>
-</div>
+MIT
