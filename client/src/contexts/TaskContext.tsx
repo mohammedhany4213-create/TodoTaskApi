@@ -83,15 +83,15 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const filteredTasks = useMemo(() => tasks
     .filter((task) => {
       const q = searchQuery.trim().toLowerCase();
-      if (q && !task.title.toLowerCase().includes(q) && !task.description.toLowerCase().includes(q)) return false;
+      if (q && !task.title.toLowerCase().includes(q) && !task.description.toLowerCase().includes(q) && !task.category.toLowerCase().includes(q)) return false;
       if (statusFilter !== 'all' && task.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false;
       if (categoryFilter !== 'all' && task.category !== categoryFilter) return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === 'dueDate_asc') return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      if (sortBy === 'dueDate_desc') return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+      if (sortBy === 'dueDate_asc') return new Date(a.dueDate || '9999-12-31').getTime() - new Date(b.dueDate || '9999-12-31').getTime();
+      if (sortBy === 'dueDate_desc') return new Date(b.dueDate || '1900-01-01').getTime() - new Date(a.dueDate || '1900-01-01').getTime();
       if (sortBy === 'createdAt_desc') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       if (sortBy === 'priority_desc') {
         const weight = { urgent: 4, high: 3, medium: 2, low: 1 };
@@ -117,7 +117,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const createdTask = await todoApi.createTask({
       title: taskData.title.trim(),
       description: taskData.description.trim(),
-      dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
+      dueDate: taskData.dueDate || null,
     });
     setTasks((prev) => [{ ...createdTask, priority: taskData.priority, category: taskData.category }, ...prev]);
   };
@@ -130,7 +130,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: merged.title.trim(),
       description: merged.description.trim(),
       isCompleted: merged.status === 'completed',
-      dueDate: merged.dueDate ? new Date(merged.dueDate).toISOString() : null,
+      dueDate: merged.dueDate || null,
     });
     setTasks((prev) => prev.map((task) => task.id === id ? { ...task, ...taskData, updatedAt: new Date().toISOString().split('T')[0] } : task));
   };
@@ -148,7 +148,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: task.title,
       description: task.description,
       isCompleted,
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
+      dueDate: task.dueDate || null,
     });
     setTasks((prev) => prev.map((item) => item.id === id ? {
       ...item,
