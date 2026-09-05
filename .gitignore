@@ -1,20 +1,36 @@
 # .NET
-bin/
-obj/
+**/bin/
+**/obj/
 .vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+# ASP.NET / local development
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+
+# EF Core local artifacts
+*.db
+*.db-shm
+*.db-wal
 
 # Node
-node_modules/
-dist/
+**/node_modules/
+**/dist/
+**/.vite/
 
-# VS Code
-.vscode/
-
-# Environment
+# Environment / secrets
 .env
 .env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
