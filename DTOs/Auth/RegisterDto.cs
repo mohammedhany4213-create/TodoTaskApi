@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TodoApi.DTOs.Auth;
 
-public class RegisterDto
+public sealed class RegisterDto
 {
     [Required]
     [MaxLength(100)]
