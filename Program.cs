@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TodoApi.Data;
+using TodoApi.Exceptions;
 using TodoApi.Services;
 using TodoApi.Services.Interfaces;
 
@@ -24,7 +25,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -73,14 +74,14 @@ app.UseExceptionHandler(errorApp =>
         context.Response.StatusCode = exception switch
         {
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-            InvalidOperationException => StatusCodes.Status409Conflict,
+            ConflictException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
 
         var message = exception switch
         {
-            UnauthorizedAccessException => "Invalid email or password.",
-            InvalidOperationException => exception.Message,
+            UnauthorizedAccessException => "Unauthorized.",
+            ConflictException => exception.Message,
             _ => "An unexpected error occurred."
         };
 
