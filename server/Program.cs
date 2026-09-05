@@ -19,6 +19,9 @@ var jwtAudience = builder.Configuration["Jwt:Audience"]
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Database connection string is not configured.");
 
+if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("JWT key must be at least 32 bytes long.");
+
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
