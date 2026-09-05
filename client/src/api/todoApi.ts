@@ -4,10 +4,10 @@ import { Task } from '../types';
 export interface ApiTaskDto {
   id: number;
   title: string;
-  description: string;
+  description: string | null;
   isCompleted: boolean;
   createdAt: string;
-  dueDate?: string | null;
+  dueDate: string | null;
 }
 
 export interface CreateTaskRequest {
@@ -32,7 +32,7 @@ export function mapApiTaskToTask(dto: ApiTaskDto): Task {
     id: String(dto.id),
     title: dto.title,
     description: dto.description ?? '',
-    dueDate: dto.dueDate ? formatDate(dto.dueDate) : createdDate,
+    dueDate: dto.dueDate ? formatDate(dto.dueDate) : '',
     status: dto.isCompleted ? 'completed' : 'todo',
     priority: 'medium',
     category: 'Work',
