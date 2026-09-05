@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,7 +13,7 @@ using TodoApi.Services.Interfaces;
 
 namespace TodoApi.Services;
 
-public class AuthService : IAuthService
+public sealed class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly PasswordHasher<User> _passwordHasher = new();
@@ -45,7 +46,7 @@ public class AuthService : IAuthService
         {
             await _context.SaveChangesAsync();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (IsDuplicateKeyException(ex))
         {
             throw new ConflictException("Email already exists.");
         }
@@ -116,5 +117,11 @@ public class AuthService : IAuthService
             Token = new JwtSecurityTokenHandler().WriteToken(token),
             Expiration = expiration
         };
+    }
+
+    private static bool IsDuplicateKeyException(DbUpdateException exception)
+    {
+        return exception.InnerException is SqlException sqlException
+            && sqlException.Number is 2601 or 2627;
     }
 }
