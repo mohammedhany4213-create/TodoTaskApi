@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TodoApi.DTOs.Tasks;
 
-public class CreateTaskDto
+public sealed class CreateTaskDto
 {
     [Required]
     [MaxLength(100)]
