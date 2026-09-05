@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using TodoApi.Data;
 using TodoApi.DTOs.Auth;
+using TodoApi.Exceptions;
 using TodoApi.Models;
 using TodoApi.Services.Interfaces;
 
@@ -29,7 +30,7 @@ public class AuthService : IAuthService
         var userName = dto.UserName.Trim();
 
         if (await _context.Users.AnyAsync(u => u.Email == email))
-            throw new InvalidOperationException("Email already exists.");
+            throw new ConflictException("Email already exists.");
 
         var user = new User
         {
@@ -46,7 +47,7 @@ public class AuthService : IAuthService
         }
         catch (DbUpdateException)
         {
-            throw new InvalidOperationException("Email already exists.");
+            throw new ConflictException("Email already exists.");
         }
 
         return CreateAuthResponse(user);
@@ -58,7 +59,7 @@ public class AuthService : IAuthService
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user is null)
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new UnauthorizedAccessException();
 
         var result = _passwordHasher.VerifyHashedPassword(
             user,
@@ -66,7 +67,7 @@ public class AuthService : IAuthService
             dto.Password);
 
         if (result == PasswordVerificationResult.Failed)
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new UnauthorizedAccessException();
 
         if (result == PasswordVerificationResult.SuccessRehashNeeded)
         {
