@@ -6,7 +6,7 @@ using TodoApi.Services.Interfaces;
 
 namespace TodoApi.Services;
 
-public class TaskService : ITaskService
+public sealed class TaskService : ITaskService
 {
     private readonly AppDbContext _context;
 
@@ -100,16 +100,13 @@ public class TaskService : ITaskService
         return true;
     }
 
-    private static TaskDto MapToDto(TodoTask task)
+    private static TaskDto MapToDto(TodoTask task) => new()
     {
-        return new TaskDto
-        {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            IsCompleted = task.IsCompleted,
-            CreatedAt = task.CreatedAt,
-            DueDate = task.DueDate
-        };
-    }
+        Id = task.Id,
+        Title = task.Title,
+        Description = task.Description,
+        IsCompleted = task.IsCompleted,
+        CreatedAt = task.CreatedAt,
+        DueDate = task.DueDate
+    };
 }
