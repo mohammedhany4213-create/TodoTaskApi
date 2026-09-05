@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoApi.DTOs.Auth;
 using TodoApi.Services.Interfaces;
@@ -6,7 +7,8 @@ namespace TodoApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+[AllowAnonymous]
+public sealed class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
 
