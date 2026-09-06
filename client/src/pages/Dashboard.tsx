@@ -1,13 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../contexts/TaskContext';
-import { StatCard } from '../components/common/StatCard';
 import { TaskCard } from '../components/tasks/TaskCard';
 import { LoadingSkeletonList } from '../components/common/LoadingSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/ui/Button';
 import { ListTodo, CheckCircle2, Clock, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+
+interface StatItemProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ReactNode;
+}
+
+const StatItem: React.FC<StatItemProps> = ({ title, value, subtitle, icon }) => (
+  <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 shadow-sm">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{title}</p>
+        <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{value}</p>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{subtitle}</p>
+      </div>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+        {icon}
+      </div>
+    </div>
+  </div>
+);
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -51,34 +72,10 @@ export const Dashboard: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Tasks"
-          value={stats.totalTasks}
-          subtitle="Tasks in your workspace"
-          icon={<ListTodo className="w-5 h-5" />}
-          accentColor="indigo"
-        />
-        <StatCard
-          title="Completed"
-          value={stats.completedTasks}
-          subtitle="Successfully completed"
-          icon={<CheckCircle2 className="w-5 h-5" />}
-          accentColor="emerald"
-        />
-        <StatCard
-          title="Pending"
-          value={stats.pendingTasks}
-          subtitle="Still to be completed"
-          icon={<Clock className="w-5 h-5" />}
-          accentColor="amber"
-        />
-        <StatCard
-          title="Completion Rate"
-          value={`${stats.completionRate}%`}
-          subtitle="Of your tasks completed"
-          icon={<TrendingUp className="w-5 h-5" />}
-          accentColor="violet"
-        />
+        <StatItem title="Total Tasks" value={stats.totalTasks} subtitle="Tasks in your workspace" icon={<ListTodo className="w-5 h-5" />} />
+        <StatItem title="Completed" value={stats.completedTasks} subtitle="Successfully completed" icon={<CheckCircle2 className="w-5 h-5" />} />
+        <StatItem title="Pending" value={stats.pendingTasks} subtitle="Still to be completed" icon={<Clock className="w-5 h-5" />} />
+        <StatItem title="Completion Rate" value={`${stats.completionRate}%`} subtitle="Of your tasks completed" icon={<TrendingUp className="w-5 h-5" />} />
       </div>
 
       <section className="space-y-4">
@@ -89,12 +86,7 @@ export const Dashboard: React.FC = () => {
               {recentTasks.length}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-            onClick={() => navigate('/tasks')}
-          >
+          <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />} onClick={() => navigate('/tasks')}>
             View All
           </Button>
         </div>
@@ -106,13 +98,7 @@ export const Dashboard: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recentTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggleComplete={toggleTaskComplete}
-                onEdit={setEditingTask}
-                onDelete={setDeletingTaskId}
-              />
+              <TaskCard key={task.id} task={task} onToggleComplete={toggleTaskComplete} onEdit={setEditingTask} onDelete={setDeletingTaskId} />
             ))}
           </div>
         )}
