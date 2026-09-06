@@ -95,7 +95,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       completedTasks,
       pendingTasks: totalTasks - completedTasks,
       completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
-      highPriorityTasks: 0,
     };
   }, [tasks]);
 
@@ -110,15 +109,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateTask = async (id: string, taskData: { title: string; description: string; isCompleted: boolean; dueDate?: string | null }) => {
     await todoApi.updateTask(id, taskData);
-    setTasks((prev) => prev.map((task) => task.id === id ? {
-      ...task,
-      title: taskData.title,
-      description: taskData.description,
-      dueDate: taskData.dueDate || '',
-      status: taskData.isCompleted ? 'completed' : 'todo',
-      completedAt: taskData.isCompleted ? new Date().toISOString().split('T')[0] : undefined,
-      updatedAt: new Date().toISOString().split('T')[0],
-    } : task));
+    await fetchTasks();
   };
 
   const deleteTask = async (id: string) => {
