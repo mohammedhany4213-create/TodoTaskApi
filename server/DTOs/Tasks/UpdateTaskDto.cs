@@ -14,5 +14,14 @@ public sealed class UpdateTaskDto
 
     public bool IsCompleted { get; set; }
 
+    [CustomValidation(typeof(UpdateTaskDto), nameof(ValidateDueDate))]
     public DateTime? DueDate { get; set; }
+
+    public static ValidationResult? ValidateDueDate(DateTime? dueDate, ValidationContext _)
+    {
+        if (dueDate.HasValue && dueDate.Value < DateTime.UtcNow)
+            return new ValidationResult("DueDate cannot be in the past.");
+
+        return ValidationResult.Success;
+    }
 }
