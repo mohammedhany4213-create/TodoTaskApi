@@ -10,6 +10,16 @@ export interface ApiTaskDto {
   dueDate: string | null;
 }
 
+export interface PagedTasksResponse {
+  items: ApiTaskDto[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 export interface CreateTaskRequest {
   title: string;
   description: string;
@@ -42,9 +52,11 @@ export function mapApiTaskToTask(dto: ApiTaskDto): Task {
   };
 }
 
-export async function getTasks(): Promise<Task[]> {
-  const response = await api.get<ApiTaskDto[]>('/api/tasks');
-  return response.data.map(mapApiTaskToTask);
+export async function getTasks(pageNumber = 1, pageSize = 20): Promise<PagedTasksResponse> {
+  const response = await api.get<PagedTasksResponse>('/api/tasks', {
+    params: { pageNumber, pageSize },
+  });
+  return response.data;
 }
 
 export async function getTaskById(id: string): Promise<Task> {
