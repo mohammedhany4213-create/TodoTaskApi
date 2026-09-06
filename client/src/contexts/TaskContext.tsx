@@ -53,7 +53,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsError(false);
     setErrorMessage('');
     try {
-      setTasks(await todoApi.getTasks());
+      const result = await todoApi.getTasks(1, 100);
+      setTasks(result.items.map(todoApi.mapApiTaskToTask));
     } catch (error) {
       setIsError(true);
       setErrorMessage(getApiErrorMessage(error, 'Failed to load tasks'));
