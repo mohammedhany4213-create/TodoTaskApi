@@ -3,17 +3,16 @@ import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { useTasks } from '../../contexts/TaskContext';
-import { TaskPriority, TaskCategory } from '../../types';
 import { getApiErrorMessage } from '../../api/axios';
 import { Calendar, Plus } from 'lucide-react';
+
+const getDefaultDueDate = () => new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
 export const AddTaskModal: React.FC = () => {
   const { isAddModalOpen, setIsAddModalOpen, addTask } = useTasks();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [category, setCategory] = useState<TaskCategory>('Work');
+  const [dueDate, setDueDate] = useState(getDefaultDueDate());
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,12 +36,14 @@ export const AddTaskModal: React.FC = () => {
     setError('');
 
     try {
-      await addTask({ title: cleanTitle, description: cleanDescription, dueDate, priority, category, status: 'todo' });
+      await addTask({
+        title: cleanTitle,
+        description: cleanDescription,
+        dueDate: dueDate || null,
+      });
       setTitle('');
       setDescription('');
-      setDueDate(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
-      setPriority('medium');
-      setCategory('Work');
+      setDueDate(getDefaultDueDate());
       setIsAddModalOpen(false);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Failed to create task'));
@@ -62,21 +63,7 @@ export const AddTaskModal: React.FC = () => {
           <p className="text-right text-[11px] text-slate-400">{description.length}/500</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Input type="date" label="Due Date" leftIcon={<Calendar className="w-4 h-4" />} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Priority</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm py-2.5 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs">
-              <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Category</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value as TaskCategory)} className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm py-2.5 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs">
-              <option value="Engineering">Engineering</option><option value="Design">Design</option><option value="Work">Work</option><option value="Marketing">Marketing</option><option value="Personal">Personal</option>
-            </select>
-          </div>
-        </div>
+        <Input type="date" label="Due Date" leftIcon={<Calendar className="w-4 h-4" />} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
 
         <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
           <Button type="button" variant="ghost" onClick={close}>Cancel</Button>
