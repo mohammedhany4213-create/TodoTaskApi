@@ -1,14 +1,16 @@
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
-export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'archived';
+// Keep the frontend status model aligned with the API.
+export type TaskStatus = 'todo' | 'completed';
 
+// These fields are currently presentation-only in the frontend.
 export type TaskCategory = 'Work' | 'Personal' | 'Design' | 'Engineering' | 'Marketing';
 
 export interface Task {
   id: string;
   title: string;
   description: string;
-  dueDate: string; // ISO string format YYYY-MM-DD
+  dueDate: string;
   status: TaskStatus;
   priority: TaskPriority;
   category: TaskCategory;
