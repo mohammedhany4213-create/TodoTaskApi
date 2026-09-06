@@ -6,7 +6,7 @@ namespace TodoApi.Services.Interfaces
     {
         Task<TaskDto> CreateTaskAsync(CreateTaskDto dto, int userId);
 
-        Task<IEnumerable<TaskDto>> GetAllTasksAsync(int userId);
+        Task<PagedResultDto<TaskDto>> GetAllTasksAsync(int userId, int pageNumber, int pageSize);
 
         Task<TaskDto?> GetTaskByIdAsync(int id, int userId);
 
