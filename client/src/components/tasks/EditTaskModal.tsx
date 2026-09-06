@@ -3,7 +3,6 @@ import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { useTasks } from '../../contexts/TaskContext';
-import { TaskPriority, TaskCategory } from '../../types';
 import { getApiErrorMessage } from '../../api/axios';
 import { Calendar, Save } from 'lucide-react';
 
@@ -13,8 +12,6 @@ export const EditTaskModal: React.FC = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [category, setCategory] = useState<TaskCategory>('Work');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,8 +21,6 @@ export const EditTaskModal: React.FC = () => {
       setDescription(editingTask.description);
       setDueDate(editingTask.dueDate);
       setIsCompleted(editingTask.status === 'completed');
-      setPriority(editingTask.priority);
-      setCategory(editingTask.category);
       setError('');
     }
   }, [editingTask]);
@@ -48,10 +43,8 @@ export const EditTaskModal: React.FC = () => {
       await updateTask(editingTask.id, {
         title: cleanTitle,
         description: cleanDescription,
-        dueDate,
-        status: isCompleted ? 'completed' : 'todo',
-        priority,
-        category,
+        isCompleted,
+        dueDate: dueDate || null,
       });
       setEditingTask(null);
     } catch (err) {
@@ -81,21 +74,6 @@ export const EditTaskModal: React.FC = () => {
             </select>
           </div>
           <Input type="date" label="Due Date" leftIcon={<Calendar className="w-4 h-4" />} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Priority</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm py-2.5 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs">
-              <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Category</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value as TaskCategory)} className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm py-2.5 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs">
-              <option value="Engineering">Engineering</option><option value="Design">Design</option><option value="Work">Work</option><option value="Marketing">Marketing</option><option value="Personal">Personal</option>
-            </select>
-          </div>
         </div>
 
         <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
