@@ -49,10 +49,41 @@ public class TaskServiceTests
         await context.SaveChangesAsync();
 
         var service = new TaskService(context);
-        var result = await service.GetAllTasksAsync(userId: 1);
+        var result = await service.GetAllTasksAsync(userId: 1, pageNumber: 1, pageSize: 20);
 
-        Assert.Single(result);
-        Assert.Equal("A", result.First().Title);
+        Assert.Single(result.Items);
+        Assert.Equal("A", result.Items.First().Title);
+        Assert.Equal(1, result.TotalCount);
+        Assert.Equal(1, result.TotalPages);
+    }
+
+    [Fact]
+    public async Task GetAllTasksAsync_ReturnsCorrectPageAndMetadata()
+    {
+        await using var context = CreateContext();
+        for (var i = 1; i <= 5; i++)
+        {
+            context.Tasks.Add(new TodoTask
+            {
+                Title = $"Task {i}",
+                Description = "x",
+                UserId = 1,
+                CreatedAt = DateTime.UtcNow.AddMinutes(i)
+            });
+        }
+
+        await context.SaveChangesAsync();
+
+        var service = new TaskService(context);
+        var result = await service.GetAllTasksAsync(userId: 1, pageNumber: 2, pageSize: 2);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(2, result.PageNumber);
+        Assert.Equal(2, result.PageSize);
+        Assert.Equal(5, result.TotalCount);
+        Assert.Equal(3, result.TotalPages);
+        Assert.True(result.HasNextPage);
+        Assert.True(result.HasPreviousPage);
     }
 
     [Fact]
