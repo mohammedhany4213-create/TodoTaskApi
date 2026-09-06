@@ -44,11 +44,7 @@ export function mapApiTaskToTask(dto: ApiTaskDto): Task {
     description: dto.description ?? '',
     dueDate: dto.dueDate ? formatDate(dto.dueDate) : '',
     status: dto.isCompleted ? 'completed' : 'todo',
-    priority: 'medium',
-    category: 'Work',
     createdAt: createdDate,
-    updatedAt: createdDate,
-    completedAt: dto.isCompleted ? createdDate : undefined,
   };
 }
 
