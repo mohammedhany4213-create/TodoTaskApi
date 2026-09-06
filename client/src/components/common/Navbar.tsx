@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
-import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { useTasks } from '../../contexts/TaskContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -70,12 +69,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
 
           <button
             onClick={handleLogout}
-            className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
             title="Sign Out"
             aria-label="Sign Out"
           >
-            <Avatar name="User" size="sm" />
-            <span className="sr-only"><LogOut /></span>
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
