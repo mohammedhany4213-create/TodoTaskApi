@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Task, TaskPriority, TaskStatus, TaskCategory, SortOption, TaskStats } from '../types';
+import { Task, TaskStatus, SortOption, TaskStats } from '../types';
 import { useAuth } from './AuthContext';
 import * as todoApi from '../api/todoApi';
 import { getApiErrorMessage } from '../api/axios';
@@ -12,23 +12,16 @@ interface TaskContextType {
   setSearchQuery: (query: string) => void;
   statusFilter: TaskStatus | 'all';
   setStatusFilter: (status: TaskStatus | 'all') => void;
-  priorityFilter: TaskPriority | 'all';
-  priorityFilterState: TaskPriority | 'all';
-  setPriorityFilter: (priority: TaskPriority | 'all') => void;
-  categoryFilter: TaskCategory | 'all';
-  setCategoryFilter: (category: TaskCategory | 'all') => void;
   sortBy: SortOption;
   setSortBy: (sort: SortOption) => void;
   isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
   isError: boolean;
-  setIsError: (error: boolean) => void;
   errorMessage: string;
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
   fetchTasks: () => Promise<void>;
-  addTask: (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateTask: (id: string, taskData: Partial<Task>) => Promise<void>;
+  addTask: (taskData: { title: string; description: string; dueDate?: string | null }) => Promise<void>;
+  updateTask: (id: string, taskData: { title: string; description: string; isCompleted: boolean; dueDate?: string | null }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   toggleTaskComplete: (id: string) => Promise<void>;
   isAddModalOpen: boolean;
@@ -46,8 +39,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tasks, setTasks] = useState<Task[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('dueDate_asc');
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -83,23 +74,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const filteredTasks = useMemo(() => tasks
     .filter((task) => {
       const q = searchQuery.trim().toLowerCase();
-      if (q && !task.title.toLowerCase().includes(q) && !task.description.toLowerCase().includes(q) && !task.category.toLowerCase().includes(q)) return false;
+      if (q && !task.title.toLowerCase().includes(q) && !task.description.toLowerCase().includes(q)) return false;
       if (statusFilter !== 'all' && task.status !== statusFilter) return false;
-      if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false;
-      if (categoryFilter !== 'all' && task.category !== categoryFilter) return false;
       return true;
     })
     .sort((a, b) => {
       if (sortBy === 'dueDate_asc') return new Date(a.dueDate || '9999-12-31').getTime() - new Date(b.dueDate || '9999-12-31').getTime();
       if (sortBy === 'dueDate_desc') return new Date(b.dueDate || '1900-01-01').getTime() - new Date(a.dueDate || '1900-01-01').getTime();
       if (sortBy === 'createdAt_desc') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (sortBy === 'priority_desc') {
-        const weight = { urgent: 4, high: 3, medium: 2, low: 1 };
-        return weight[b.priority] - weight[a.priority];
-      }
       if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
       return 0;
-    }), [tasks, searchQuery, statusFilter, priorityFilter, categoryFilter, sortBy]);
+    }), [tasks, searchQuery, statusFilter, sortBy]);
 
   const stats = useMemo<TaskStats>(() => {
     const totalTasks = tasks.length;
@@ -109,30 +94,30 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       completedTasks,
       pendingTasks: totalTasks - completedTasks,
       completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
-      highPriorityTasks: tasks.filter((task) => task.priority === 'urgent' || task.priority === 'high').length,
+      highPriorityTasks: 0,
     };
   }, [tasks]);
 
-  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addTask = async (taskData: { title: string; description: string; dueDate?: string | null }) => {
     const createdTask = await todoApi.createTask({
       title: taskData.title.trim(),
       description: taskData.description.trim(),
       dueDate: taskData.dueDate || null,
     });
-    setTasks((prev) => [{ ...createdTask, priority: taskData.priority, category: taskData.category }, ...prev]);
+    setTasks((prev) => [createdTask, ...prev]);
   };
 
-  const updateTask = async (id: string, taskData: Partial<Task>) => {
-    const existing = tasks.find((task) => task.id === id);
-    if (!existing) return;
-    const merged = { ...existing, ...taskData };
-    await todoApi.updateTask(id, {
-      title: merged.title.trim(),
-      description: merged.description.trim(),
-      isCompleted: merged.status === 'completed',
-      dueDate: merged.dueDate || null,
-    });
-    setTasks((prev) => prev.map((task) => task.id === id ? { ...task, ...taskData, updatedAt: new Date().toISOString().split('T')[0] } : task));
+  const updateTask = async (id: string, taskData: { title: string; description: string; isCompleted: boolean; dueDate?: string | null }) => {
+    await todoApi.updateTask(id, taskData);
+    setTasks((prev) => prev.map((task) => task.id === id ? {
+      ...task,
+      title: taskData.title,
+      description: taskData.description,
+      dueDate: taskData.dueDate || '',
+      status: taskData.isCompleted ? 'completed' : 'todo',
+      completedAt: taskData.isCompleted ? new Date().toISOString().split('T')[0] : undefined,
+      updatedAt: new Date().toISOString().split('T')[0],
+    } : task));
   };
 
   const deleteTask = async (id: string) => {
@@ -143,29 +128,22 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleTaskComplete = async (id: string) => {
     const task = tasks.find((item) => item.id === id);
     if (!task) return;
-    const isCompleted = task.status !== 'completed';
-    await todoApi.updateTask(id, {
+    await updateTask(id, {
       title: task.title,
       description: task.description,
-      isCompleted,
+      isCompleted: task.status !== 'completed',
       dueDate: task.dueDate || null,
     });
-    setTasks((prev) => prev.map((item) => item.id === id ? {
-      ...item,
-      status: isCompleted ? 'completed' : 'todo',
-      completedAt: isCompleted ? new Date().toISOString().split('T')[0] : undefined,
-      updatedAt: new Date().toISOString().split('T')[0],
-    } : item));
   };
 
   return (
     <TaskContext.Provider value={{
       tasks, filteredTasks, stats, searchQuery, setSearchQuery,
-      statusFilter, setStatusFilter, priorityFilter, priorityFilterState: priorityFilter, setPriorityFilter,
-      categoryFilter, setCategoryFilter, sortBy, setSortBy,
-      isLoading, setIsLoading, isError, setIsError, errorMessage,
-      viewMode, setViewMode, fetchTasks, addTask, updateTask, deleteTask, toggleTaskComplete,
-      isAddModalOpen, setIsAddModalOpen, editingTask, setEditingTask, deletingTaskId, setDeletingTaskId,
+      statusFilter, setStatusFilter, sortBy, setSortBy,
+      isLoading, isError, errorMessage, viewMode, setViewMode,
+      fetchTasks, addTask, updateTask, deleteTask, toggleTaskComplete,
+      isAddModalOpen, setIsAddModalOpen, editingTask, setEditingTask,
+      deletingTaskId, setDeletingTaskId,
     }}>
       {children}
     </TaskContext.Provider>
