@@ -19,10 +19,18 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAllTasks()
+    public async Task<ActionResult<PagedResultDto<TaskDto>>> GetAllTasks(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
     {
+        if (pageNumber < 1)
+            return BadRequest(new { message = "pageNumber must be greater than 0." });
+
+        if (pageSize < 1 || pageSize > 100)
+            return BadRequest(new { message = "pageSize must be between 1 and 100." });
+
         var userId = GetCurrentUserId();
-        return Ok(await _taskService.GetAllTasksAsync(userId));
+        return Ok(await _taskService.GetAllTasksAsync(userId, pageNumber, pageSize));
     }
 
     [HttpGet("{id:int}")]
