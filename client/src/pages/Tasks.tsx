@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useTasks } from '../contexts/TaskContext';
 import { SearchBar } from '../components/common/SearchBar';
 import { FilterBar } from '../components/common/FilterBar';
@@ -8,32 +8,17 @@ import { LoadingSkeletonList } from '../components/common/LoadingSkeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
-import { Plus, ListTodo, RefreshCw } from 'lucide-react';
+import { Plus, ListTodo } from 'lucide-react';
 
 export const Tasks: React.FC = () => {
   const {
-    filteredTasks,
-    searchQuery,
-    setSearchQuery,
-    statusFilter,
-    setStatusFilter,
-    priorityFilter,
-    setPriorityFilter,
-    categoryFilter,
-    setCategoryFilter,
-    sortBy,
-    setSortBy,
-    isLoading,
-    isError,
-    errorMessage,
-    fetchTasks,
-    viewMode,
-    setViewMode,
-    toggleTaskComplete,
-    setEditingTask,
-    setDeletingTaskId,
-    setIsAddModalOpen,
+    filteredTasks, searchQuery, setSearchQuery, statusFilter, setStatusFilter,
+    sortBy, setSortBy, isLoading, isError, errorMessage, fetchTasks,
+    viewMode, setViewMode, toggleTaskComplete, setEditingTask,
+    setDeletingTaskId, setIsAddModalOpen,
   } = useTasks();
+
+  const hasFilters = Boolean(searchQuery.trim()) || statusFilter !== 'all';
 
   return (
     <div className="space-y-6">
@@ -42,66 +27,30 @@ export const Tasks: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <ListTodo className="w-7 h-7 text-indigo-500" /> Tasks
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Create, organize, and complete your personal tasks.
-          </p>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">Create, organize, and complete your personal tasks.</p>
         </div>
-        <Button size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsAddModalOpen(true)}>
-          Add Task
-        </Button>
+        <Button size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsAddModalOpen(true)}>Add Task</Button>
       </div>
 
-      {isError && (
-        <ErrorState
-          title="Unable to load your tasks"
-          message={errorMessage || 'Please check your connection and try again.'}
-          onRetry={fetchTasks}
-        />
-      )}
+      {isError && <ErrorState title="Unable to load your tasks" message={errorMessage || 'Please check your connection and try again.'} onRetry={fetchTasks} />}
 
       <div className="space-y-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 p-4 rounded-2xl shadow-xs">
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search tasks..."
-        />
-        <FilterBar
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          priorityFilter={priorityFilter}
-          onPriorityChange={setPriorityFilter}
-          categoryFilter={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search tasks..." />
+        <FilterBar statusFilter={statusFilter} onStatusChange={setStatusFilter} sortBy={sortBy} onSortChange={setSortBy} viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
-      {isLoading ? (
-        <LoadingSkeletonList count={6} />
-      ) : filteredTasks.length === 0 ? (
+      {isLoading ? <LoadingSkeletonList count={6} /> : filteredTasks.length === 0 ? (
         <EmptyState
-          title={searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' ? 'No matching tasks' : 'No tasks yet'}
-          description="Create a task or adjust your filters to get started."
-          iconType={searchQuery ? 'search' : 'tasks'}
+          title={hasFilters ? 'No matching tasks' : 'No tasks yet'}
+          description={hasFilters ? 'Try adjusting your search or status filter.' : 'Create your first task to get started.'}
+          iconType={hasFilters ? 'search' : 'tasks'}
           actionLabel="Create Task"
           onAction={() => setIsAddModalOpen(true)}
         />
       ) : (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
           <AnimatePresence mode="popLayout">
-            {filteredTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                viewMode={viewMode}
-                onToggleComplete={toggleTaskComplete}
-                onEdit={setEditingTask}
-                onDelete={setDeletingTaskId}
-              />
-            ))}
+            {filteredTasks.map((task) => <TaskCard key={task.id} task={task} viewMode={viewMode} onToggleComplete={toggleTaskComplete} onEdit={setEditingTask} onDelete={setDeletingTaskId} />)}
           </AnimatePresence>
         </div>
       )}
