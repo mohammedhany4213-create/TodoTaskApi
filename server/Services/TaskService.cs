@@ -47,12 +47,18 @@ public sealed class TaskService : ITaskService
         return true;
     }
 
-    public async Task<IEnumerable<TaskDto>> GetAllTasksAsync(int userId)
+    public async Task<PagedResultDto<TaskDto>> GetAllTasksAsync(int userId, int pageNumber, int pageSize)
     {
-        return await _context.Tasks
+        var query = _context.Tasks
             .AsNoTracking()
             .Where(t => t.UserId == userId)
-            .OrderByDescending(t => t.CreatedAt)
+            .OrderByDescending(t => t.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(t => new TaskDto
             {
                 Id = t.Id,
@@ -63,6 +69,14 @@ public sealed class TaskService : ITaskService
                 DueDate = t.DueDate
             })
             .ToListAsync();
+
+        return new PagedResultDto<TaskDto>
+        {
+            Items = items,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<TaskDto?> GetTaskByIdAsync(int id, int userId)
