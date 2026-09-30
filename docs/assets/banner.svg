@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="t d">
+  <title id="t">TodoTaskApi</title>
+  <desc id="d">Secure, layered task management API built with ASP.NET Core and .NET 10</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f0c29"/>
+      <stop offset="0.55" stop-color="#302b63"/>
+      <stop offset="1" stop-color="#512bd4"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#c4b5fd"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.05"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="320" rx="20" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="20" fill="url(#grid)"/>
+  <circle cx="1050" cy="60" r="170" fill="#7dd3fc" fill-opacity="0.07"/>
+  <circle cx="1130" cy="290" r="130" fill="#c4b5fd" fill-opacity="0.08"/>
+
+  <!-- task card stack -->
+  <g transform="translate(90 70)">
+    <rect x="18" y="-14" width="250" height="160" rx="18" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="9" y="-7" width="250" height="160" rx="18" fill="#ffffff" fill-opacity="0.09"/>
+    <rect width="250" height="160" rx="18" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.25"/>
+    <g>
+      <rect x="24" y="26" width="26" height="26" rx="8" fill="url(#accent)"/>
+      <path d="M31 39l6 6 11-13" fill="none" stroke="#0f0c29" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
+        <animate attributeName="stroke-dashoffset" from="40" to="0" dur="0.8s" begin="0.3s" fill="freeze"/>
+      </path>
+      <rect x="64" y="32" width="150" height="10" rx="5" fill="#ffffff" fill-opacity="0.85"/>
+      <rect x="64" y="46" width="90" height="7" rx="3.5" fill="#ffffff" fill-opacity="0.35"/>
+    </g>
+    <g>
+      <rect x="24" y="72" width="26" height="26" rx="8" fill="url(#accent)"/>
+      <path d="M31 85l6 6 11-13" fill="none" stroke="#0f0c29" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
+        <animate attributeName="stroke-dashoffset" from="40" to="0" dur="0.8s" begin="1.0s" fill="freeze"/>
+      </path>
+      <rect x="64" y="78" width="120" height="10" rx="5" fill="#ffffff" fill-opacity="0.85"/>
+      <rect x="64" y="92" width="100" height="7" rx="3.5" fill="#ffffff" fill-opacity="0.35"/>
+    </g>
+    <g>
+      <rect x="24" y="118" width="26" height="26" rx="8" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2.5"/>
+      <rect x="64" y="124" width="140" height="10" rx="5" fill="#ffffff" fill-opacity="0.6"/>
+      <rect x="64" y="138" width="70" height="7" rx="3.5" fill="#ffffff" fill-opacity="0.25"/>
+    </g>
+  </g>
+
+  <!-- title -->
+  <g font-family="'Segoe UI', Inter, system-ui, -apple-system, Arial, sans-serif">
+    <text x="400" y="138" font-size="74" font-weight="800" fill="#ffffff" letter-spacing="-2">Todo<tspan fill="url(#accent)">Task</tspan>Api</text>
+    <text x="404" y="186" font-size="25" fill="#e0e7ff" fill-opacity="0.92">Secure, layered task management API</text>
+    <g font-size="15" font-weight="600" fill="#ffffff">
+      <rect x="404" y="214" width="92" height="32" rx="16" fill="#ffffff" fill-opacity="0.14"/><text x="450" y="235" text-anchor="middle">.NET 10</text>
+      <rect x="508" y="214" width="92" height="32" rx="16" fill="#ffffff" fill-opacity="0.14"/><text x="554" y="235" text-anchor="middle">EF Core</text>
+      <rect x="612" y="214" width="112" height="32" rx="16" fill="#ffffff" fill-opacity="0.14"/><text x="668" y="235" text-anchor="middle">SQL Server</text>
+      <rect x="736" y="214" width="92" height="32" rx="16" fill="#ffffff" fill-opacity="0.14"/><text x="782" y="235" text-anchor="middle">JWT</text>
+    </g>
+  </g>
+</svg>
