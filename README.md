@@ -373,6 +373,6 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <div align="center">
 
-Built with ☕ and ASP.NET Core by [Mooo](https://github.com/mohammedhany4213-create)
+Built with ☕ and ASP.NET Core by [Eng Mohamed Hany](https://github.com/mohammedhany4213-create)
 
 </div>
