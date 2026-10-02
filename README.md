@@ -158,10 +158,11 @@ TodoTaskApi/
 │   ├── Migrations/              # EF Core code-first migrations
 │   ├── Models/                  # Entities: User, TodoTask
 │   ├── Services/                # Business logic + Interfaces/
+│   ├── Options/                 # Strongly typed configuration
 │   ├── Program.cs               # Composition root & middleware pipeline
 │   └── TodoApi.csproj
 ├── tests/
-│   └── TodoApi.Tests/           # xUnit tests for Auth & Task services
+│   └── TodoApi.Tests/           # xUnit service & API integration tests
 ├── TodoTaskApi.sln
 ├── LICENSE
 └── README.md
@@ -366,6 +367,7 @@ Errors use RFC 7807-style Problem Details:
 - Pagination and request validation
 - EF Core migrations for SQL Server
 - Service-layer unit tests
+- API integration tests
 - GitHub Actions CI
 
 ### Future improvements
