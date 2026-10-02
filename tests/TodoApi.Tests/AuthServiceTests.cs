@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using TodoApi.Options;
 using TodoApi.Data;
 using TodoApi.DTOs.Auth;
 using TodoApi.Exceptions;
@@ -19,26 +20,20 @@ public class AuthServiceTests
         return new AppDbContext(options);
     }
 
-    private static IConfiguration CreateConfiguration()
-    {
-        var settings = new Dictionary<string, string?>
+    private static IOptions<JwtOptions> CreateJwtOptions() =>
+        Options.Create(new JwtOptions
         {
-            ["Jwt:Key"] = "this-is-a-test-secret-key-with-32+chars",
-            ["Jwt:Issuer"] = "TodoApi.Tests",
-            ["Jwt:Audience"] = "TodoApi.Tests.Users",
-            ["Jwt:DurationInMinutes"] = "60"
-        };
-
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(settings)
-            .Build();
-    }
+            Key = "this-is-a-test-secret-key-with-32+chars",
+            Issuer = "TodoApi.Tests",
+            Audience = "TodoApi.Tests.Users",
+            DurationInMinutes = 60
+        });
 
     [Fact]
     public async Task RegisterAsync_CreatesUser_AndReturnsToken()
     {
         await using var context = CreateContext();
-        var service = new AuthService(context, CreateConfiguration());
+        var service = new AuthService(context, CreateJwtOptions());
 
         var dto = new RegisterDto
         {
@@ -59,7 +54,7 @@ public class AuthServiceTests
     public async Task RegisterAsync_ThrowsConflict_WhenEmailAlreadyExists()
     {
         await using var context = CreateContext();
-        var service = new AuthService(context, CreateConfiguration());
+        var service = new AuthService(context, CreateJwtOptions());
 
         var dto = new RegisterDto
         {
@@ -84,7 +79,7 @@ public class AuthServiceTests
     public async Task LoginAsync_ReturnsToken_WithCorrectCredentials()
     {
         await using var context = CreateContext();
-        var service = new AuthService(context, CreateConfiguration());
+        var service = new AuthService(context, CreateJwtOptions());
 
         await service.RegisterAsync(new RegisterDto
         {
@@ -106,7 +101,7 @@ public class AuthServiceTests
     public async Task LoginAsync_Throws_WhenUserDoesNotExist()
     {
         await using var context = CreateContext();
-        var service = new AuthService(context, CreateConfiguration());
+        var service = new AuthService(context, CreateJwtOptions());
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             service.LoginAsync(new LoginDto { Email = "nobody@example.com", Password = "whatever" }));
@@ -116,7 +111,7 @@ public class AuthServiceTests
     public async Task LoginAsync_Throws_WhenPasswordIsWrong()
     {
         await using var context = CreateContext();
-        var service = new AuthService(context, CreateConfiguration());
+        var service = new AuthService(context, CreateJwtOptions());
 
         await service.RegisterAsync(new RegisterDto
         {

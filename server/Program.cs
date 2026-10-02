@@ -4,36 +4,27 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TodoApi.Data;
+using TodoApi.Options;
 using TodoApi.Exceptions;
 using TodoApi.Services;
 using TodoApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("JWT key is not configured.");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]
-    ?? throw new InvalidOperationException("JWT issuer is not configured.");
-var jwtAudience = builder.Configuration["Jwt:Audience"]
-    ?? throw new InvalidOperationException("JWT audience is not configured.");
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Database connection string is not configured.");
 
-if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
-    throw new InvalidOperationException("JWT key must be at least 32 bytes long.");
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Key), "JWT key is required.")
+    .Validate(options => Encoding.UTF8.GetByteCount(options.Key) >= 32, "JWT key must be at least 32 bytes long.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Issuer), "JWT issuer is required.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Audience), "JWT audience is required.")
+    .Validate(options => options.DurationInMinutes > 0, "JWT duration must be greater than zero.")
+    .ValidateOnStart();
 
 builder.Services.AddControllers();
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
-
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -56,9 +47,12 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"]
+                    ?? throw new InvalidOperationException("JWT key is not configured."))),
         ClockSkew = TimeSpan.FromSeconds(30)
     };
 });
@@ -73,22 +67,25 @@ app.UseExceptionHandler(errorApp =>
     {
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = exception switch
+        var statusCode = exception switch
         {
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             ConflictException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
 
-        var message = exception switch
+        var detail = exception switch
         {
-            UnauthorizedAccessException => "Unauthorized.",
+            UnauthorizedAccessException => "The request could not be authenticated.",
             ConflictException => exception.Message,
             _ => "An unexpected error occurred."
         };
 
-        await context.Response.WriteAsJsonAsync(new { message });
+        await Results.Problem(
+            statusCode: statusCode,
+            title: "Request failed.",
+            detail: detail)
+            .ExecuteAsync(context);
     });
 });
 
@@ -98,7 +95,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

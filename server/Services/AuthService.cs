@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Options;
+using TodoApi.Options;
 using TodoApi.Data;
 using TodoApi.DTOs.Auth;
 using TodoApi.Exceptions;
@@ -17,12 +19,12 @@ public sealed class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly PasswordHasher<User> _passwordHasher = new();
-    private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
 
-    public AuthService(AppDbContext context, IConfiguration configuration)
+    public AuthService(AppDbContext context, IOptions<JwtOptions> jwtOptions)
     {
         _context = context;
-        _configuration = configuration;
+        _jwtOptions = jwtOptions.Value;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -81,21 +83,9 @@ public sealed class AuthService : IAuthService
 
     private AuthResponseDto CreateAuthResponse(User user)
     {
-        var key = _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("JWT key is not configured.");
-        var issuer = _configuration["Jwt:Issuer"]
-            ?? throw new InvalidOperationException("JWT issuer is not configured.");
-        var audience = _configuration["Jwt:Audience"]
-            ?? throw new InvalidOperationException("JWT audience is not configured.");
-        var duration = _configuration.GetValue<int?>("Jwt:DurationInMinutes")
-            ?? throw new InvalidOperationException("JWT duration is not configured.");
-
-        if (duration <= 0)
-            throw new InvalidOperationException("JWT duration must be greater than zero.");
-
-        var expiration = DateTime.UtcNow.AddMinutes(duration);
+        var expiration = DateTime.UtcNow.AddMinutes(_jwtOptions.DurationInMinutes);
         var credentials = new SigningCredentials(
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
             SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -106,8 +96,8 @@ public sealed class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
             claims: claims,
             expires: expiration,
             signingCredentials: credentials);

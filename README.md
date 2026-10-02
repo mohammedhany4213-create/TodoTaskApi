@@ -14,7 +14,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contributing)
 
-**A production-minded REST API for personal task management — JWT authentication, strict per-user data isolation, and a clean service-layer architecture.**
+**A production-minded backend REST API for personal task management — JWT authentication, strict per-user data isolation, pagination, validation, and a clean service-layer architecture.**
 
 [Quick Start](#-quick-start) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Security](#-security-design) · [Roadmap](#-roadmap)
 
@@ -40,11 +40,11 @@
 
 ```mermaid
 flowchart LR
-    Client([🖥️ Client<br/>SPA / Mobile / curl])
+    Client([🖥️ API Client<br/>Mobile / Web / curl])
 
     subgraph API["ASP.NET Core Web API (.NET 10)"]
         direction TB
-        MW["Middleware pipeline<br/>Exception handler · HTTPS · CORS · AuthN · AuthZ"]
+        MW["Middleware pipeline<br/>Exception handler · HTTPS · AuthN · AuthZ"]
         subgraph Controllers
             AC[AuthController]
             TC[TasksController]
@@ -124,6 +124,10 @@ erDiagram
 
 ---
 
+## 🎯 Project Scope
+
+This repository intentionally contains the **backend only**. A frontend is not part of the project scope; the API is designed to be consumed by any HTTP client.
+
 ## 🧰 Tech Stack
 
 | Layer | Technology |
@@ -133,7 +137,7 @@ erDiagram
 | Database | Microsoft SQL Server |
 | Authentication | JWT Bearer · `PasswordHasher<User>` |
 | API docs | Built-in OpenAPI (Development) |
-| Testing | xUnit · EF Core InMemory provider |
+| Testing | xUnit · EF Core InMemory provider · service & API integration tests |
 | CI | GitHub Actions |
 
 ---
@@ -326,8 +330,15 @@ Base path: `/api` · Content type: `application/json`
 
 **Error shape**
 
+Errors use RFC 7807-style Problem Details:
+
 ```json
-{ "message": "Email already exists." }
+{
+  "type": "about:blank",
+  "title": "Request failed.",
+  "status": 409,
+  "detail": "Email already exists."
+}
 ```
 
 ---
@@ -342,19 +353,28 @@ Base path: `/api` · Content type: `application/json`
 | **Data isolation** | All task reads/writes filter on the caller's `UserId` from the token claims. Foreign ids are indistinguishable from missing ones (`404`). |
 | **Email uniqueness** | Emails are normalized (trim + lowercase) and protected by a unique database index; races are caught and returned as `409`. |
 | **Error surface** | Unhandled exceptions return a generic message; internals are never exposed to the client. |
-| **Transport** | HTTPS redirection enabled; CORS restricted to an allow-listed origin. |
+| **Transport** | HTTPS redirection enabled; authentication and authorization enforced on protected endpoints. |
 
 ---
 
 ## 🗺 Roadmap
 
+### Current scope
+
+- JWT authentication with password hashing
+- Per-user task isolation
+- Pagination and request validation
+- EF Core migrations for SQL Server
+- Service-layer unit tests
+- GitHub Actions CI
+
+### Future improvements
+
 - [ ] Refresh tokens & token revocation
 - [ ] Rate limiting on `/Auth/*`
-- [ ] Integration tests with `WebApplicationFactory`
 - [ ] Filtering & sorting (`isCompleted`, due date ranges, search)
 - [ ] Dockerfile + `docker-compose` (API + SQL Server)
-- [ ] Structured logging (Serilog) and health checks
-- [ ] Configurable CORS origins per environment
+- [ ] Health checks
 
 ---
 
