@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TodoApi.Data;
 
 namespace TodoApi.Tests;
@@ -26,10 +28,8 @@ public sealed class TodoApiFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.Single(
-                d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-
-            services.Remove(descriptor);
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase("TodoApi.IntegrationTests"));
