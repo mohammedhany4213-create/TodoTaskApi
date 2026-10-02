@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using OptionsWrapper = Microsoft.Extensions.Options.Options;
 using TodoApi.Options;
 using TodoApi.Data;
 using TodoApi.DTOs.Auth;
@@ -21,7 +22,7 @@ public class AuthServiceTests
     }
 
     private static IOptions<JwtOptions> CreateJwtOptions() =>
-        Options.Create(new JwtOptions
+        OptionsWrapper.Create(new JwtOptions
         {
             Key = "this-is-a-test-secret-key-with-32+chars",
             Issuer = "TodoApi.Tests",
